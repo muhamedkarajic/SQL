@@ -319,6 +319,7 @@ substring(AdresaNarucitelja, len(AdresaNarucitelja)-2, len(AdresaNarucitelja)) l
 
 --22. Iz tabele Orders baze Northwind ispisati prvu riječ naziva naručitelja 
 --pri čemu treba izostaviti one čiji naziv predstavlja neprekinuti niz znakova.
+
 select left(ShipName, charindex(' ', ShipName)) as 'Prva rijec', ShipName
 from NORTHWND.dbo.Orders
 where left(ShipName, charindex(' ', ShipName)) <> ''
@@ -331,4 +332,15 @@ where left(ShipName, charindex(' ', ShipName)) <> ''
 alter table Narudzbe
 add Lozinka char(40) null
 
+update Narudzbe
+set Lozinka = convert(char, REVERSE(convert(char, HireDate) + convert(char, LoginID)))
+from AdventureWorks2014.HumanResources.Employee
+--select * from Narudzbe
 
+
+
+--24. U tabeli Orders baze Northwind prebrojati koliko ima naručitelja čiji naziv se sastoji iz neprikinutog niza znakova.
+
+select count(*) as 'Broj neprekidnih naziva'
+from NORTHWND.dbo.Orders
+where charindex(' ', ShipName) = ''
