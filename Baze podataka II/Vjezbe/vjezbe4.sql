@@ -214,4 +214,108 @@ drop constraint FK_AutorID, FK_DjeloID
 
 
 --16. U tabelu AutorDjelo importovati sve zapise iz tabele titleauthor baze pubs, pri čemu će se polje ISBN popunjavati na sljedeći način:
---iz polja title_id preuzeti cifre, te prije njih ubaciti riječ ISBN pri čemu između ISBN i cifara treba biti jedno prazno mjesto, a poslije njih prazno mjesto i vrijednost polja au_id iz tabele titleauthor baze pubs.
+--iz polja title_id preuzeti cifre, te prije njih ubaciti riječ ISBN pri čemu između ISBN i cifara treba biti jedno prazno mjesto, 
+--a poslije njih prazno mjesto i vrijednost polja au_id iz tabele titleauthor baze pubs.
+
+insert into AutorDjelo
+select 
+	au_id, 
+	title_id, 
+	au_ord, 
+	royaltyper, 
+	'ISBN ' + substring(title_id,3, len(title_id)) + ' ' + au_id as 'ISBN'
+from pubs.dbo.titleauthor
+--select * from AutorDjelo
+
+
+
+--17. Iz tabele AutorDjelo dati pregled 10 zapisa sa najmanjim udjelom autorskih prava. 
+--Potrebno je dati prikaz svih polja.
+select TOP 10 * 
+from AutorDjelo
+order by UdioAutPrava
+
+
+
+--18. Kreirati bazu podataka RadnaBaza.
+create database RadnaBaza
+
+use RadnaBaza
+
+
+
+--19. U bazi RadnaBaza kreirati tabelu Narudzbe koja će se sastojati od polja:
+--NarudzbaID, cjelobrojna varijabla, primarni ključ
+--NaruciteljID, 5 znakova,
+--ZaposlenikID, cjelobrojna varijabla,
+--DatumNarudbe, datumska varijabla,
+--KrajnjiDatumIsporuke, datumska varijabla,
+--DatumIsporuke, datumska varijabla,
+--IsporuciteljID, cjelobrojna varijabla,
+--CijenaPrevoza, novčana varijabla,
+--NazivNarucitelja, 40 unicode karaktera,
+--AdresaNarucitelja, 60 unicode karaktera,
+--GradNarucitelja, 15 unicode karaktera,
+--RegijaNarucitelja, 15 unicode karaktera,
+--PostBrojNarucitelja, 10 unicode karaktera,
+--DrzavaNarucitelja, 15 unicode karaktera
+
+create table Narudzbe
+(
+	NarudzbaID int constraint PK_NarudzbaID primary key(NarudzbaID),
+	NaruciteljID char(5) not null,						   
+	ZaposlenikID int not null,			
+	DatumNarudbe date not null,				
+	KrajnjiDatumIsporuke date null,		
+	DatumIsporuke date null,			   
+	IsporuciteljID int,		   
+	CijenaPrevoza money null,				
+	NazivNarucitelja nvarchar(40) ,		   
+	AdresaNarucitelja nvarchar(60),		
+	GradNarucitelja nvarchar(15),		   
+	RegijaNarucitelja nvarchar(15),		
+	PostBrojNarucitelja nvarchar(10),	   
+	DrzavaNarucitelja nvarchar(15)
+)
+--drop table Narudzbe
+--delete from Narudzbe
+
+
+
+--20. U tabelu Narudzbe importovati sve zapise iz tabele Orders baze Northwind kod kojih je cijena prevoza manja od 100 
+--i prva dva znaka adrese su cifra ili prazno mjesto, a nakon toga slijede znaci koji nisu cifre. 
+--U datumske varijable upisati samo datum (bez vremena). 
+--Također, sve NULL vrijednosti polja ShipRegion zamijeniti sa BH. 
+
+insert into Narudzbe
+select *
+from NORTHWND.dbo.Orders
+where Freight > 100 and ShipAddress like '[a-z ][a-z ]%'
+
+update Narudzbe
+set RegijaNarucitelja = 'BH'
+where RegijaNarucitelja is null
+--select * from Narudzbe
+
+
+
+--21. U tabeli Narudzbe kreirati novu kolonu Broj_u_Ulici u koju će se smjestiti broj iz kolone AdresaNarucitelja, 
+--dok će u koloni AdresaNarucitelja biti preostali dio adrese.
+alter table Narudzbe
+add Broj_u_Ulici int null
+
+--Za jednocifrene i dvocifrene (dio trocifrenih) brojeve
+update Narudzbe 
+set Broj_u_Ulici = convert(int, substring(AdresaNarucitelja, len(AdresaNarucitelja)-1, len(AdresaNarucitelja)))
+where substring(AdresaNarucitelja, len(AdresaNarucitelja), len(AdresaNarucitelja)) like '[0-9]'
+--Za trocifrene brojeve brojeve
+update Narudzbe 
+set Broj_u_Ulici = substring(AdresaNarucitelja, len(AdresaNarucitelja)-3, len(AdresaNarucitelja))
+where 
+substring(AdresaNarucitelja, len(AdresaNarucitelja)-2, len(AdresaNarucitelja)) like '[0-9][0-9][0-9]'
+--select * from Narudzbe
+
+
+
+--22. Iz tabele Orders baze Northwind ispisati prvu riječ naziva naručitelja 
+--pri čemu treba izostaviti one čiji naziv predstavlja neprekinuti niz znakova.
