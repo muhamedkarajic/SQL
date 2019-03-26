@@ -319,3 +319,16 @@ substring(AdresaNarucitelja, len(AdresaNarucitelja)-2, len(AdresaNarucitelja)) l
 
 --22. Iz tabele Orders baze Northwind ispisati prvu riječ naziva naručitelja 
 --pri čemu treba izostaviti one čiji naziv predstavlja neprekinuti niz znakova.
+select left(ShipName, charindex(' ', ShipName)) as 'Prva rijec', ShipName
+from NORTHWND.dbo.Orders
+where left(ShipName, charindex(' ', ShipName)) <> ''
+
+
+
+--23. U tabeli Narudzba kreirati novu kolonu Lozinka. Kolonu popuniti koristeći polja LoginID i HireDate 
+--iz tabele HumanResources.Employee baze AdventureWorks2014. 
+--Lozinka se formira tako što se spoje datum zaposlenja i ime zaposlenika, te se tako dobijeni string obrne.
+alter table Narudzbe
+add Lozinka char(40) null
+
+
