@@ -2,7 +2,7 @@
 Structured Query Language (SQL) is the programming language for databases
 
 ### Curriculum:
-* Lectures:
+Lectures:
 1. Database management systems
 2. SQL (Structure Query Language)
 3. Integrity and security
@@ -13,6 +13,6 @@ Structured Query Language (SQL) is the programming language for databases
 8. Architecture system database system
 9. Cloud database systems
 
-* Exercises:
+Exercises:
 1. SQL Language
 2. Administration of the DBMS environment
