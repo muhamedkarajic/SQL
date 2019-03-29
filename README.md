@@ -6,10 +6,10 @@ Lectures:
 1. Database management systems
 2. SQL (Structure Query Language)
 3. Integrity and security
-4. Page and structure of database files
-5. Individuals
+4. Structure of database files
+5. Indexes
 6. Transactions
-7. Revolution of errors
+7. Recover from errors
 8. Architecture system database system
 9. Cloud database systems
 
