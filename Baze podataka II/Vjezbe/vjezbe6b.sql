@@ -96,10 +96,14 @@ create table JoinTabla3(
 --6. U tabelu JoinTabela3 importovati podatke iz kolona 
 --BirthDate, HireDate, Resume i DepartmentID 
 --tabela EmployeeDepartmentHistory, Employee, JobCandidate baze AdventureWorks2014.
+select * 
+from AdventureWorks2014.HumanResources.EmployeeDepartmentHistory
+select * 
+from AdventureWorks2014.HumanResources.Employee
 
 
 
---Iz tabela Production.Product, Production.ProductInventory i Product.Location 
+--7. Iz tabela Production.Product, Production.ProductInventory i Product.Location 
 --u tabelu JoinTabela2 importovati sve zapise u kojima se ispred, iza ili i ispred i iza dvije cifre nalazi bilo koji znak (karakter)
 --Primjeri: aa12 ili 12aa ili a12a ili 12a ili a12*/
 
@@ -113,7 +117,6 @@ on pi.LocationID = l.LocationID
 where	p.ProductNumber like ('%[A-Z][0-9][0-9][A-Z]%') OR
 		p.ProductNumber like ('%[A-Z][0-9][0-9]%') OR
 		p.ProductNumber like ('%[0-9][0-9][A-Z]%')
---460
 
 
 
@@ -136,7 +139,7 @@ order by pod.OrderQty * pod.UnitPrice
 --Name, OrderDate, OrderQty, i UnitPrice. Također dati prikaz ukupne vrijednosti narudžbe i
 --ukupan broj pojedinih ukupan broj pojedinih ukupnih vrijednosti narudžbi. 
 --Rezultat sortirati po ukupnom broju pojedinih ukupnih vrijednosti narudžbe.
---340
+
 select v.Name, poh.OrderDate, pod.OrderQty, pod.UnitPrice
 from AdventureWorks2014.Purchasing.PurchaseOrderDetail as pod
 inner join AdventureWorks2014.Purchasing.PurchaseOrderHeader as poh
@@ -148,3 +151,130 @@ order by pod.OrderQty * pod.UnitPrice
 
 
 
+--8. U bazi Join kreirati tabelu JoinTabela4 koja će se sastojati od sljedećih polja:
+--NarudzbaID cjelobrojna vrijednost, obavezan unos, primarni ključ,
+--NazivKompanije 50 UNICODE karaktera,
+--KupacID 5 karaktera
+--UposlenikID cjelobrojna vrijednost,
+--Grad 20 karaktera
+--Drzava 4 karaktera
+
+create table JoinTabela4(
+	NarudzbaID int constraint PK_NarudzbaID primary key(NarudzbaID),
+	NazivKompanije nvarchar(50),
+	KupacID char(5),
+	UposlenikID int not null,
+	Grad char(20),
+	Drzava char(4)
+)--drop table JoinTabela4
+--select * from JoinTabela4
+
+
+
+--9. U tabelu JoinTabela4 importovati kolone OrderID, CompanyName, CustomerID, EmployeeID, City i Country 
+--iz tabela Orders, Customers i Employees baze Northwind.
+
+insert into JoinTabela4
+select o.OrderID, c.CompanyName, c.CustomerID, e.EmployeeID, e.City, e.Country
+from NORTHWND.dbo.Orders as o
+inner join NORTHWND.dbo.Customers as c
+on o.CustomerID = c.CustomerID
+inner join NORTHWND.dbo.Employees as e
+on o.EmployeeID = e.EmployeeID
+
+
+
+--10. U bazi Join kreirati tabelu JoinTabela5 koja će se sastojati od sljedećih polja:
+--PrimarniKljuc cjelobrojna vrijednost, primarni ključ, automatsko punjenje sa korakom 1
+--NarudzbaID cjelobrojna vrijednost, obavezan unos,
+--JedCijena decimalni broj sa dvije decimale, obavezan unos,
+--Kolicina cjelobrojna vrijednost, obavezan unos,
+--NazivProizvoda 50 UNICIODE karaktera, 
+--DobavljacID cjelobrojna vrijednost, obavezan unos,
+--Ukupno decimalni broj sa dvije decimale, obavezan unos
+
+--Polje NarudzbaID je spoljni ključ prema tabeli JoinTabela4.
+
+create table JoinTabela5(
+	PrimarniKljuc int identity(1,1) constraint PK_PrimarniKljuc primary key(PrimarniKljuc), 
+	NarudzbaID int not null,
+	JedCijena decimal(8,2) not null,
+	Kolicina int not null,
+	NazivProizvoda nvarchar(50), 
+	DobavljacID int not null,
+	Ukupno decimal(8,2) not null
+	constraint NarudzbaID foreign key(NarudzbaID) references JoinTabela4(NarudzbaID)
+)--drop table JoinTabela5
+
+
+
+--11. U tabelu JoinTabela5 importovati podatke iz kolona OrderID, UnitPrice, Quantity, ProductName i SupplierID 
+--tabela Order Details i Products. Polje Ukupno je izračunato polje.
+
+insert into JoinTabela5
+select OrderID, od.UnitPrice, Quantity, ProductName, SupplierID, od.UnitPrice * od.Quantity as Ukupno
+from NORTHWND.dbo.[Order Details] as od
+inner join NORTHWND.dbo.Products as p
+on od.ProductID = p.ProductID
+--select * from JoinTabela5
+
+
+
+--12. Iz tabela JoinTabela4 i JoinTabela5 dati prikaz sume Ukupno 
+--pri čemu će rezultat biti grupiran po nazivu kompanije i ID narudžbe.
+select NazivKompanije, j5.NarudzbaID, sum(j5.Ukupno)
+from JoinTabela4 as j4
+inner join JoinTabela5 as j5 
+on j4.NarudzbaID = j5.NarudzbaID 
+group by NazivKompanije, j5.NarudzbaID
+
+
+
+--13. Iz tabela JoinTabela4 i JoinTabela5 dati prikaz ukupnog broja ostvarenih narudžbi 
+--uz uslov da je ukupan broj narudžbi bio veći od 3 
+--pri čemu će rezultat biti grupiran po nazivu kompanije i ID narudžbe.
+--Također kolicina treba da bude veća od 10.
+
+select j4.NazivKompanije, j4.KupacID, j5.NarudzbaID, count(*) as 'Broj narudzba'
+from JoinTabela4 as j4
+inner join JoinTabela5 as j5
+on j4.NarudzbaID = j5.NarudzbaID
+where j5.Kolicina > 10
+group by j4.NazivKompanije, j4.KupacID, j5.NarudzbaID
+having count(*) > 3
+order by KupacID
+
+
+
+--14. Iz tabela PurchaseOrderDetail, PurchaseOrderHeader i Vendor dati prikaz polja Name, OrderDate, OrderQty i UnitPrice. 
+--Također dati prikaz ukupne vrijednosti narudžbe. 
+--Rezultat sortirati po ukupnoj vrijednosti narudžbe.*/
+
+select Name, OrderDate, OrderQty, UnitPrice, pod.OrderQty * pod.UnitPrice  as Ukupno
+from AdventureWorks2014.Purchasing.PurchaseOrderDetail as pod
+inner join AdventureWorks2014.Purchasing.PurchaseOrderHeader  as poh
+on pod.PurchaseOrderID = poh.PurchaseOrderID
+inner join AdventureWorks2014.Purchasing.Vendor as v
+on v.BusinessEntityID = poh.VendorID
+where pod.OrderQty * pod.UnitPrice > 10
+order by pod.OrderQty * pod.UnitPrice 
+
+
+
+--15. Iz tabela PurchaseOrderDetail, PurchaseOrderHeader i Vendor dati prikaz polja Name, OrderQty i UnitPrice. 
+--Također dati prikaz ukupne vrijednosti narudžbe i ukupan broj pojedinih ukupnih vrijednosti narudžbi. 
+--Rezultat sortirati ukupnom broju pojedinih ukupnih vrijednosti narudžbe.*/
+
+
+select Name, OrderQty, UnitPrice, pod.OrderQty * pod.UnitPrice  as Ukupno, count(*)
+from AdventureWorks2014.Purchasing.PurchaseOrderDetail as pod
+inner join AdventureWorks2014.Purchasing.PurchaseOrderHeader  as poh
+on pod.PurchaseOrderID = poh.PurchaseOrderID
+inner join AdventureWorks2014.Purchasing.Vendor as v
+on v.BusinessEntityID = poh.VendorID
+where pod.OrderQty * pod.UnitPrice > 10
+group by v.BusinessEntityID, pod.PurchaseOrderID
+order by pod.OrderQty * pod.UnitPrice 
+
+
+select * from AdventureWorks2014.Purchasing.PurchaseOrderHeader
