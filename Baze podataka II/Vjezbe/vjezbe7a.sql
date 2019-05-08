@@ -1,6 +1,7 @@
 ﻿-- 1. Iz tabela Employees, EmployeeTerritories, Territories i Region baze Northwind 
 -- prikazati prezime i ime uposlenika kao polje ime i prezime, teritoriju i regiju 
 -- koju pokrivaju i stariji su od 30 godina.
+use NORTHWND
 
 select DATEDIFF(year, e.BirthDate, GETDATE()) as years, FirstName, LastName, r.RegionDescription, t.TerritoryDescription
 from Employees as e
@@ -64,5 +65,107 @@ on p.SupplierID = s.SupplierID
 where UnitsInStock > 30 and c.CategoryID = 1
 order by 2
 
+
+
+-- 5. U tabeli Customers baze Northwind ID kupca je primarni ključ. 
+-- U tabeli Orders baze Northwind ID kupca je vanjski ključ. Dati izvještaj:
+
+-- a) koliko je ukupno kupaca evidentirano u bazi Northwind (u obje tabele)
+select CustomerID from Customers
+union
+select CustomerID from Orders
+
+-- b) da li su svi kupci obavili narudžbu
+select CustomerID from Customers
+intersect 
+select CustomerID from Orders
+
+-- c) koji kupci nisu napravili narudžbu*/
+select CustomerID from Customers
+except
+select CustomerID from Orders
+
+
+
+-- 6.
+-- a) Provjeriti u koliko zapisa (slogova) tabele Orders nije unijeta vrijednost u polje regija kupovine.
+select ShipRegion from Orders
+where ShipRegion IS NULL
+
+-- b) Upotrebom tabela Customers i Orders baze Northwind prikazati ID kupca 
+-- pri čemu u polje regija kupovine nije unijeta vrijednost, 
+-- uz uslov da je kupac obavio narudžbu (kupac iz tabele Customers postoji u tabeli Orders). 
+--Rezultat sortirati u rastućem redoslijedu.
+
+select CustomerID 
+from Customers
+intersect
+select CustomerID 
+from Orders
+where ShipRegion IS NULL
+order by CustomerID asc
+
+-- c) Upotrebom tabela Customers i Orders baze Northwind prikazati ID kupca 
+-- pri čemu u polje regija kupovine nije unijeta vrijednost i 
+-- kupac nije obavio ni jednu narudžbu (kupac iz tabele Customers ne postoji u tabeli Orders).
+-- Rezultat sortirati u rastućem redoslijedu.
+
+select CustomerID 
+from Customers
+except
+select CustomerID 
+from Orders
+where ShipRegion IS NULL
+order by CustomerID asc
+
+
+
+-- 7. Iz tabele HumanResources.Employee baze AdventureWorks2014 prikazati po 5 najstarijih zaposlenika muškog, 
+-- odnosno, ženskog pola uz navođenje sljedećih podataka: 
+-- radno mjesto na kojem se nalazi, datum rođenja, korisnicko ime i godine starosti. 
+-- Korisničko ime je dio podatka u LoginID. 
+-- Rezultate sortirati prema polu uzlaznim, a zatim prema godinama starosti silaznim redoslijedom.
+
+use AdventureWorks2014
+
+
+select	TOP 5 JobTitle, BirthDate, RIGHT(LoginID, LEN(LoginID) - 16) as 'User name', 
+		DATEDIFF(YEAR,BirthDate, GETDATE()) as 'Godine Starosti', Gender
+from HumanResources.Employee
+where Gender = 'M'
+UNION
+select	TOP 5 JobTitle, BirthDate, RIGHT(LoginID, LEN(LoginID) - 16) as 'User name', 
+		DATEDIFF(YEAR,BirthDate, GETDATE()) as 'Godine Starosti', Gender
+from HumanResources.Employee
+where Gender = 'F'
+order by 5, 4 desc
+
+
+
+-- 8. Iz tabele HumanResources.Employee baze AdventureWorks2014 prikazati po 3 zaposlenika sa 
+-- najdužim stažom bez obzira da li su u braku i obavljaju poslove inžinjera uz navođenje sljedećih podataka: 
+-- radno mjesto na kojem se nalazi, datum zaposlenja i bračni status. 
+-- Ako osoba nije u braku plaća dodatni porez,inače ne plaća. 
+-- Rezultate sortirati prema bračnom statusu uzlaznim, a zatim prema stažu silaznim redoslijedom.
+
+select TOP 3 JobTitle, HireDate, MaritalStatus, 
+			 DATEDIFF(YEAR, HireDate, GETDATE()),
+			 '' as Porez
+from HumanResources.Employee
+where MaritalStatus = 'M' and
+JobTitle like '%engineer%' and JobTitle not like '%engineering%'
+UNION
+select TOP 3 JobTitle, HireDate, MaritalStatus, 
+			 DATEDIFF(YEAR, HireDate, GETDATE()),
+			 'Dodatni porez!' as Porez
+from HumanResources.Employee
+where MaritalStatus = 'S' and
+JobTitle like '%engineer%' and JobTitle not like '%engineering%'
+order by 3, 4 desc
+
+
+
+/*ZADATAK 9
+Iz tabela HumanResources.Employee i Person.Person prikazati po 5 osoba koje se nalaze na 1, odnosno, 4.  organizacionom nivou, uposlenici su i žele primati email ponude od AdventureWorksa uz navođenje sljedećih polja: ime i prezime osobe kao jedinstveno polje, organizacijski nivo na kojem se nalazi i da li prima email promocije. Pored ovih uvesti i polje koje će sadržavati poruke: Ne prima, Prima selektirane i Prima. Sadržaj novog polja ovisi o vrijednosti polja EmailPromotion. Rezultat sortirati prema organizacijskom nivou i dodatno uvedenom polju.*/
 
 
