@@ -102,3 +102,79 @@ where d.discount <= 5
 order by t.type
 
 
+
+-- Nad bazom podataka Northwind kreirati 5 složenijih upita primjenom različitih elemenata SELECT komande. 
+-- Uključiti prikaz plana izvršenja i analizirati komentare. Primjenom alata SQL Server Profiler kreirati novi trace, 
+-- izvršiti kreirane upite te dobiveni rezultat sačuvati.	
+-- Iz tabela Customers i Orders u bazi Northwind za narudžbe izvršene u 1997. godini prikazati ime naručitelja (kupca) i 
+-- ukupnu vrijednost troška prevoza po naručitelju.
+use NORTHWND
+
+select c.CompanyName, sum(o.Freight) as 'Prijevoz'
+from Customers as c
+	inner join Orders as o
+	on o.CustomerID = c.CustomerID
+where year(o.OrderDate) = 1997
+group by c.CompanyName
+
+
+
+-- Iz tabela Employees, EmployeeTerritories, Territories i Region baze Northwind prikazati prezime i ime uposlenika 
+-- kao polje ime i prezime, teritoriju i regiju koju pokrivaju i stariji su od 30 godina.
+
+select e.FirstName + ' ' + e.LastName 'Ime i prezime', t.TerritoryDescription, r.RegionDescription
+from Employees e
+	inner join EmployeeTerritories et
+	on et.EmployeeID = e.EmployeeID
+	inner join Territories t
+	on t.TerritoryID = et.TerritoryID
+	inner join Region r
+	on r.RegionID = t.RegionID
+where datediff(year, e.BirthDate, getdate()) > 30
+
+
+
+-- Iz tabela Employee, Order Details i Orders baze Northwind prikazati ime i prezime uposlenika kao polje ime i prezime, 
+-- jediničnu cijenu, količinu i ukupnu vrijednost pojedinačne narudžbe kao polje ukupno za sve narudžbe u 1997. godini, 
+-- pri čemu će se rezultati sortirati prema novokreiranom polju ukupno.
+select	e.FirstName + ' ' + e.LastName 'Ime i prezime', e.FirstName, e.LastName, 
+		od.UnitPrice - od.UnitPrice * od.Discount 'Cijena', od.Quantity 'Kolicina', 
+		od.Quantity*(od.UnitPrice - od.UnitPrice * od.Discount) 'Ukupno'
+from Employees e
+	inner join Orders o
+	on e.EmployeeID = o.EmployeeID
+	inner join [Order Details] od
+	on od.OrderID = o.OrderID
+where year(o.OrderDate) = 1997
+order by 'Ukupno'
+
+
+
+-- Iz tabela Employee, Order Details i Orders baze Northwind prikazati ime uposlenika i ukupnu vrijednost svih narudžbi 
+-- koje je taj uposlenik napravio u 1996. godini ako je ukupna vrijednost veća od 50000, pri čemu će se rezultati 
+-- sortirati uzlaznim redoslijedom prema polju ime. Vrijednost sume zaokružiti na dvije decimale.
+
+select	e.FirstName, sum(od.Quantity * (od.UnitPrice - od.Discount * od.UnitPrice)) 'Ukupno'
+from Employees e
+	inner join Orders o
+	on e.EmployeeID = o.EmployeeID
+	inner join [Order Details] od
+	on od.OrderID = o.OrderID
+where year(o.OrderDate) = 1997
+group by e.EmployeeID, e.FirstName, e.LastName
+having  sum(od.Quantity * (od.UnitPrice - od.Discount * od.UnitPrice)) > 50000
+order by e.FirstName
+
+
+
+-- Iz tabela Categories, Products i Suppliers baze Northwind prikazati naziv isporučitelja (dobavljača), 
+-- mjesto i državu isporučitelja (dobavljača) i naziv(e) proizvoda iz kategorije napitaka (pića) kojih na stanju 
+-- ima više od 30 jedinica. Rezultat upita sortirati po državi.
+
+select s.CompanyName, s.Country, s.City, p.ProductName 
+from Categories c
+	inner join Products p
+	on c.CategoryID = p.CategoryID
+	inner join Suppliers s
+	on p.SupplierID = s.SupplierID
+where c.CategoryID = 1 and p.UnitsInStock > 30
